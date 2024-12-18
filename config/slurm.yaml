@@ -1,0 +1,61 @@
+__default__:
+  time: "0-10:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+# long jobs
+megahit:
+  time: "02-00:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+concoct:
+  time: "02-00:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+metabinner:
+  time: "02-00:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+pharokka_viruses:
+  time: "00-30:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+# short repetitive jobs
+cutadapt:
+  time: "00-01:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+filter_length:
+  time: "00-01:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+filter_n_reads:
+  time: "00-01:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+minimap2:
+  time: "00-02:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
+
+samtools:
+  time: "00-02:00:00"
+  qos: "serial"
+  nodes: 1
+  n: 1
