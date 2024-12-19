@@ -1,12 +1,11 @@
 ### TO-MODIFY: Location of directories
-#reads_dir: "/work/river/BioVir/MergedReads/"
-reads_dir: "/scratch/boutroux/BioVir/cutadapt"
-results_dir: "/scratch/boutroux/BioVir/"
+reads_dir: "/work/river/Sentinel/RNA/sequences/"
+results_dir: "/scratch/boutroux/BioVir_RNA/"
 databases_dir: "/work/river/Databases/"
 
 ### Threads
 # Assembly
-cutadapt:
+fastp:
   threads: 4
 megahit:
   threads: 30
@@ -23,29 +22,6 @@ vrhyme:
 blast:
   threads: 4
 
-# Binning
-filter_length:
-  threads: 4
-filter_n_reads:
-  threads: 7
-  read_p: 0.1
-metabat2:
-  threads: 14
-concoct:
-  threads: 20
-metabinner:
-  length: 2000
-  threads: 20
-dasTool:
-  threads: 14
-checkm2:
-  threads: 20
-  extension: "fa"
-dRep:
-  threads: 28
-  comp: 70
-  cont: 10
-
 # Coverage
 minimap2:
   threads: 20
@@ -57,19 +33,6 @@ coverm:
   threads: 30
 
 # Taxonomy
-gtdbtk:
-  threads: 20
 genomad:
   threads: 8
 
-# Analysis
-bakta:
-  threads: 4
-defensefinder:
-  threads: 4
-pharokka:
-  threads: 20
-iphop:
-  threads: 20
-phatyp:
-  threads: 20

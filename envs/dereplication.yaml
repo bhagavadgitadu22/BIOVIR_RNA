@@ -1,0 +1,10 @@
+name: viral_dereplication
+channels:
+ - conda-forge
+ - bioconda
+ - defaults
+dependencies:
+ - seqtk=1.4
+ - python=3.12.1
+ - biopython=1.81
+ - blast=2.15.0

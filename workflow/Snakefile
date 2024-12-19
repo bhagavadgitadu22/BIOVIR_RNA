@@ -12,12 +12,10 @@ RESULTS_DIR = config["results_dir"]
 DATABASES_DIR = config["databases_dir"]
 
 # Sample variables
-SAMPLES = list(glob_wildcards(os.path.join(READS_DIR, "{sample}_R1_cutadapt.fastq.gz")))[0]
-SAMPLES_NO_CONTROLS = list(filter(lambda elmt: "Control" not in elmt, SAMPLES))
+SAMPLES = list(glob_wildcards(os.path.join(READS_DIR, "{sample}_R1_001.fastq.gz")))[0]
+SAMPLES_NO_CONTROLS = list(filter(lambda elmt: "neg" not in elmt, SAMPLES))
 
-# MAGs and viral detection must not be performed on controls
-SAMPLES_MAG = list(filter(lambda elmt: ("T6_S1_Water" not in elmt and "T5_S1_Coupon" not in elmt and "T5_S2_Coupon" not in elmt), SAMPLES_NO_CONTROLS))
-SAMPLES_VIR = list(filter(lambda elmt: ("T5_S1_Coupon" not in elmt and "T5_S2_Coupon" not in elmt), SAMPLES_NO_CONTROLS))
+SAMPLES_VIR = SAMPLES_NO_CONTROLS
 
 #COASSEMBLIES = list(set([re.sub(r'_S\d', '', sample) for sample in SAMPLES]))
 #COASSEMBLIES_NO_CONTROLS = list(filter(lambda elmt: "Control" not in elmt, COASSEMBLIES))
@@ -35,45 +33,3 @@ def include_smk_files(directory):
 # Include all .smk files from the rules directory and subdirectories
 include_smk_files('rules/')
 
-### Global rules
-# One rule to rule them all
-rule launch_mag_quest:
-    input:
-        coverages_trimmed_mean = os.path.join(RESULTS_DIR, "bins", "coverm", "filtered_coverm_trimmed_mean_for_HQ_bins.tsv"),
-        coverages_count = os.path.join(RESULTS_DIR, "bins", "coverm", "filtered_coverm_count_for_HQ_bins.tsv"),
-        #taxonomies = os.path.join(RESULTS_DIR, "bins", "gtdbtk_final/classify/gtdbtk.bac120.summary.tsv")
-
-rule launch_viral_quest:
-    input:
-        HQ_coverages_trimmed_mean = os.path.join(RESULTS_DIR, "viruses", "coverm", "filtered_coverm_trimmed_mean_for_HQ_viruses.tsv"),
-        HQ_coverages_count = os.path.join(RESULTS_DIR, "viruses", "coverm", "filtered_coverm_count_for_HQ_viruses.tsv"),
-        #HQ_taxonomies = os.path.join(RESULTS_DIR, "viruses", "genomad", "HQ_viruses_dereplicated_annotate", "HQ_viruses_dereplicated_taxonomy.tsv"),
-        #all_coverages_trimmed_mean = os.path.join(RESULTS_DIR, "viruses", "coverm", "filtered_coverm_trimmed_mean_for_all_viruses.tsv"),
-        #all_coverages_count = os.path.join(RESULTS_DIR, "viruses", "coverm", "filtered_coverm_count_for_all_viruses.tsv"),
-
-rule statistics:
-    input:
-        rules.statistics_first_checkv.output,
-        rules.statistics_cobra.output,
-        rules.statistics_second_checkv.output,
-        rules.statistics_final_viral_dataset.output,
-        rules.statistics_mags.output
-
-rule launch_quest:
-    input:
-        rules.launch_mag_quest.input,
-        rules.launch_viral_quest.input,
-        rules.statistics.input
-
-rule analysis:
-    output: directory(os.path.join(RESULTS_DIR, "main_results", "analysis"))
-    input:
-        HQ_viruses_grodon = rules.global_grodon.output,
-        mags_defense = rules.defenseFinder_all_mags.output,
-        HQ_viruses_defense = os.path.join(RESULTS_DIR, "viruses", "defenseFinder_for_HQ_viruses", "prodigal-gv_defense_finder_systems.tsv"),
-        all_viruses_defense = os.path.join(RESULTS_DIR, "viruses", "defenseFinder_for_all_viruses", "prodigal-gv_defense_finder_systems.tsv"),
-        HQ_viruses_iphop = os.path.join(RESULTS_DIR, "viruses", "iphop_for_all_viruses", "Host_prediction_to_genus_m90.csv"),
-        HQ_viruses_phatyp = os.path.join(RESULTS_DIR, "viruses", "phatyp_for_all_viruses", "out"),
-        all_viruses_phatyp = os.path.join(RESULTS_DIR, "viruses", "phatyp_for_all_viruses", "out")
-    shell:
-        """for f in {input}; do cp $f {output}; done"""
