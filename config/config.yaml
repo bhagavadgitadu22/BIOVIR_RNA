@@ -8,31 +8,24 @@ databases_dir: "/work/river/Databases/"
 fastp:
   threads: 4
 megahit:
-  threads: 30
+  threads: 20
 
 # Viral detection
-vibrant:
+genomad:
   threads: 12
 checkv:
   threads: 12
 cobra:
-  threads: 20
-vrhyme:
-  threads: 20
+  threads: 12
 blast:
   threads: 4
 
 # Coverage
 minimap2:
-  threads: 20
+  threads: 12
 samtools:
   threads: 8
 bedtools:
   threads: 4
 coverm:
-  threads: 30
-
-# Taxonomy
-genomad:
-  threads: 8
-
+  threads: 20

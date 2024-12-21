@@ -7,5 +7,5 @@ dependencies:
  - seqkit=2.6.1
  - seqtk=1.4
  - diamond=2.0.4
- - checkv=1.0.1
- - vibrant=1.2.1
+ - checkv=1.0.3
+ - genomad=1.8.1

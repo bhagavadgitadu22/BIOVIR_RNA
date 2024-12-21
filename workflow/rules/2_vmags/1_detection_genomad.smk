@@ -1,23 +1,28 @@
-# VIBRANT: output list of viruses including some proviruses whose names were changed compared to original contigs
-rule db_vibrant:
-    output: os.path.join(RESULTS_DIR, "logs/vibrant_db_downloaded.txt")
-    conda: os.path.join(ENV_DIR, "viral_detection.yaml")
-    threads: config['vibrant']['threads']
-    log: os.path.join(RESULTS_DIR, "logs/vibrant_db.log")
-    message: "Downloading the VIBRANT database"
-    shell: """(date && download-db.sh && echo "Database downloaded" > {output} && date) &> {log}"""
-
-rule vibrant:
-    output: os.path.join(RESULTS_DIR, "viruses", "vibrant", "VIBRANT_{assembly}.renamed.contigs", "VIBRANT_phages_{assembly}.renamed.contigs", "{assembly}.renamed.contigs.phages_combined.fna")
-    input: 
-        assembly = os.path.join(RESULTS_DIR, "megahit", "{assembly}_megahit", "{assembly}.renamed.contigs.fa"),
-        #db = rules.db_vibrant.output,
-    conda: os.path.join(ENV_DIR, "viral_detection.yaml")
-    threads: config['vibrant']['threads']
-    log: os.path.join(RESULTS_DIR, "logs", "{assembly}_vibrant.log")
-    message: "Running VIBRANT"
+# geNomad for taxonomies of viruses
+rule db_genomad:
+    output: os.path.join(RESULTS_DIR, "dbs", "genomad_db", "genomad_marker_metadata.tsv")
+    log: os.path.join(RESULTS_DIR, "logs/genomad_db.log")
+    conda: os.path.join(ENV_DIR, "viral_taxonomy.yaml")
+    message: "Downloading the geNomad database"
     shell:
-        """(date && VIBRANT_run.py -t {threads} -i {input.assembly} -folder $(dirname $(dirname {output})) && date) &> {log}"""
+        """
+        (date && cd $(dirname $(dirname {output})) &&
+        wget -nc https://zenodo.org/records/10594875/files/genomad_db_v1.7.tar.gz && 
+        tar --skip-old-files -zxvf genomad_db_v1.7.tar.gz && date) &> {log}
+        """
+
+rule genomad_viruses:
+    output: os.path.join(RESULTS_DIR, "viruses", "{assembly}_genomad", "{assembly}.renamed.contigs_summary", "{assembly}.renamed.contigs_virus.fna")
+    input: 
+        contigs = os.path.join(RESULTS_DIR, "megahit", "{assembly}_megahit", "{assembly}.renamed.contigs.fa"),
+        db = os.path.join(RESULTS_DIR, "dbs", "genomad_db", "genomad_marker_metadata.tsv"),
+    conda: os.path.join(ENV_DIR, "viral_taxonomy.yaml")
+    threads: config['genomad']['threads']
+    log:
+        os.path.join(RESULTS_DIR, "logs/coverm_filter.log")
+    message: "Finding the taxonomies of the viruses with geNomad"
+    shell:
+        "(date && genomad end-to-end --threads {threads} --cleanup --enable-score-calibration --composition metagenome --max-fdr 0.05 {input.contigs} $(dirname $(dirname {output})) $(dirname {input.db}) && date) &> {log}"
 
 # First CheckV
 rule db_checkv:
@@ -38,14 +43,14 @@ rule first_checkv:
         checkv_quality = os.path.join(RESULTS_DIR, "viruses", "first_checkv", "{assembly}_first_checkv", "quality_summary.tsv"),
         checkv_proviruses = os.path.join(RESULTS_DIR, "viruses", "first_checkv", "{assembly}_first_checkv", "proviruses.fna"),
     input: 
-        vibrant = os.path.join(RESULTS_DIR, "viruses", "vibrant", "VIBRANT_{assembly}.renamed.contigs", "VIBRANT_phages_{assembly}.renamed.contigs", "{assembly}.renamed.contigs.phages_combined.fna"),
+        virus = os.path.join(RESULTS_DIR, "viruses", "{assembly}_genomad", "{assembly}.renamed.contigs_summary", "{assembly}.renamed.contigs_virus.fna"),
         db = rules.db_checkv.output,
     conda: os.path.join(ENV_DIR, "viral_detection.yaml")
     threads: config['checkv']['threads']
     log: os.path.join(RESULTS_DIR, "logs", "{assembly}_first_checkv.log")
     message: "Running the first CheckV per assembly"
     shell:
-        """(date && checkv end_to_end -t {threads} -d $(dirname $(dirname {input.db})) {input.vibrant} $(dirname {output.checkv_quality}) && date) &> {log}"""
+        """(date && checkv end_to_end -t {threads} -d $(dirname $(dirname {input.db})) {input.virus} $(dirname {output.checkv_quality}) && date) &> {log}"""
 
 # Extracting HQ (pro)viruses from checkV
 rule list_proviruses_checkv:
@@ -110,7 +115,7 @@ rule prep_cobra:
         fna_cobra = os.path.join(RESULTS_DIR, "viruses", "prep_cobra", "{assembly}_for_COBRA.fna"),
     input: 
         quality = os.path.join(RESULTS_DIR, "viruses", "first_checkv", "{assembly}_first_checkv", "quality_summary.tsv"),
-        fna = os.path.join(RESULTS_DIR, "viruses", "vibrant", "VIBRANT_{assembly}.renamed.contigs", "VIBRANT_phages_{assembly}.renamed.contigs", "{assembly}.renamed.contigs.phages_combined.fna"),
+        fna = os.path.join(RESULTS_DIR, "viruses", "{assembly}_genomad", "{assembly}.renamed.contigs_summary", "{assembly}.renamed.contigs_virus.fna"),
     conda: os.path.join(ENV_DIR, "viral_detection.yaml")
     message: "Preparing COBRA input contigs"
     shell:
@@ -123,7 +128,7 @@ rule prep_cobra:
 rule statistics_first_checkv:
     output: os.path.join(RESULTS_DIR, "statistics", "statistics_post_VIBRANT.csv")
     input:
-        vibrant_list = expand(os.path.join(RESULTS_DIR, "viruses", "vibrant", "VIBRANT_{assembly}.renamed.contigs", "VIBRANT_phages_{assembly}.renamed.contigs", "{assembly}.renamed.contigs.phages_combined.fna"), assembly=SAMPLES_VIR),
+        vibrant_list = expand(os.path.join(RESULTS_DIR, "viruses", "{assembly}_genomad", "{assembly}.renamed.contigs_summary", "{assembly}.renamed.contigs_virus.fna"), assembly=SAMPLES_VIR),
         checkv_list = expand(os.path.join(RESULTS_DIR, "viruses", "first_checkv", "{assembly}_first_checkv", "quality_summary.tsv"), assembly=SAMPLES_VIR),
         cobra_list = expand(os.path.join(RESULTS_DIR, "viruses", "prep_cobra", "{assembly}_for_COBRA.fna"), assembly=SAMPLES_VIR),
     params: 
