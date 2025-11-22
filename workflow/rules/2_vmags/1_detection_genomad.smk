@@ -19,7 +19,7 @@ rule genomad_viruses:
     conda: os.path.join(ENV_DIR, "viral_taxonomy.yaml")
     threads: config['genomad']['threads']
     log:
-        os.path.join(RESULTS_DIR, "logs/coverm_filter.log")
+        os.path.join(RESULTS_DIR, "logs/genomad_{assembly}.log")
     message: "Finding the taxonomies of the viruses with geNomad"
     shell:
         "(date && genomad end-to-end --threads {threads} --cleanup --enable-score-calibration --composition metagenome --max-fdr 0.05 {input.contigs} $(dirname $(dirname {output})) $(dirname {input.db}) && date) &> {log}"
@@ -120,7 +120,7 @@ rule prep_cobra:
     message: "Preparing COBRA input contigs"
     shell:
         """
-        grep -v "_fragment" {input.quality} | grep -v "Complete" | tail +2 | cut -f 1 > {output.list_cobra} && 
+        grep -v "_fragment" {input.quality} | grep -v "Complete" | tail -n +2 | cut -f 1 > {output.list_cobra} && 
         seqtk subseq {input.fna} {output.list_cobra} > {output.fna_cobra}
         """
 

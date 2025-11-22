@@ -3,7 +3,7 @@ rule taxonomy_viruses:
     input: 
         viruses = os.path.join(RESULTS_DIR, "viruses", "final_set_virus", "HQ_viruses_dereplicated.fna"),
         db = os.path.join(RESULTS_DIR, "dbs", "genomad_db", "genomad_marker_metadata.tsv"),
-    conda: os.path.join(ENV_DIR, "viral_detection.yaml")
+    conda: os.path.join(ENV_DIR, "viral_taxonomy.yaml")
     threads: config['genomad']['threads']
     log:
         os.path.join(RESULTS_DIR, "logs/coverm_filter.log")

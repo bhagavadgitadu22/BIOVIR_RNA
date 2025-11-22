@@ -8,4 +8,3 @@ dependencies:
  - seqtk=1.4
  - diamond=2.0.4
  - checkv=1.0.3
- - genomad=1.8.1
